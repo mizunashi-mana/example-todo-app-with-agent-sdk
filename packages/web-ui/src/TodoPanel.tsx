@@ -156,6 +156,8 @@ export function TodoPanel({ ref }: TodoPanelProps) {
   }, [editTitle, fetchTodos]);
 
   const handleDelete = useCallback(async (id: string) => {
+    // eslint-disable-next-line no-alert -- intentional confirm dialog for destructive action
+    if (!window.confirm('Are you sure you want to delete this TODO?')) return;
     try {
       const res = await fetch(`/api/todos/${id}`, { method: 'DELETE' });
       if (!res.ok) {
@@ -217,6 +219,7 @@ export function TodoPanel({ ref }: TodoPanelProps) {
               className="todo-checkbox"
               onClick={() => { void handleToggleStatus(todo); }}
               aria-label="Mark as completed"
+              disabled={editingId === todo.id}
             />
             {editingId === todo.id
               ? (
@@ -235,7 +238,7 @@ export function TodoPanel({ ref }: TodoPanelProps) {
                       onChange={(e) => { setEditTitle(e.target.value); }}
                       onKeyDown={(e) => { if (e.key === 'Escape') handleCancelEdit(); }}
                     />
-                    <button className="todo-action-btn todo-save-btn" type="submit">Save</button>
+                    <button className="todo-action-btn todo-save-btn" type="submit" disabled={editTitle.trim() === ''}>Save</button>
                     <button className="todo-action-btn todo-cancel-btn" type="button" onClick={handleCancelEdit}>
                       Cancel
                     </button>
