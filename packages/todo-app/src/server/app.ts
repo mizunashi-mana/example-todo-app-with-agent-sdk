@@ -9,15 +9,27 @@ export function createApp(storage: TodoStorage, options?: AppOptions) {
   const app = new Hono();
 
   app.post('/api/chat', async (c) => {
-    const body = await c.req.json<{ messages: ChatMessage[] }>();
+    let body;
+    try {
+      body = await c.req.json<{ messages: ChatMessage[] }>();
+    }
+    catch {
+      return c.json({ error: 'Invalid JSON body' }, 400);
+    }
     const { messages } = body;
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return c.json({ error: 'messages array is required' }, 400);
     }
 
-    const response = await agent.chat(messages);
-    return c.json({ role: 'assistant', content: response });
+    try {
+      const response = await agent.chat(messages);
+      return c.json({ role: 'assistant', content: response });
+    }
+    catch (e) {
+      const message = e instanceof Error ? e.message : 'Unknown error';
+      return c.json({ error: `Agent error: ${message}` }, 500);
+    }
   });
 
   return app;

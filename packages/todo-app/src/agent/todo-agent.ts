@@ -1,5 +1,5 @@
-import { generateText, stepCountIs } from 'ai';
-import { ollama } from 'ai-sdk-ollama';
+import { stepCountIs } from 'ai';
+import { generateText, ollama } from 'ai-sdk-ollama';
 import { createTodoTools } from '#tools';
 import type { TodoStorage } from '#storage';
 
