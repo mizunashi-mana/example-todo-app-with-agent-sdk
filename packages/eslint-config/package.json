@@ -9,7 +9,6 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "postinstall": "npm run build",
-    "test": "vitest run --passWithNoTests",
     "test:update": "vitest run --update",
     "lint:eslint": "eslint --cache --fix src *.ts",
     "typecheck": "tsc --noEmit"
