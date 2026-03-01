@@ -2,8 +2,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import './App.css';
 
 interface ChatMessage {
+  id: string;
   role: 'user' | 'assistant';
   content: string;
+}
+
+let nextMessageId = 0;
+function generateMessageId(): string {
+  nextMessageId += 1;
+  return `msg-${String(nextMessageId)}`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -24,28 +31,39 @@ export function App() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<string>('');
+  const loadingRef = useRef<boolean>(false);
+
+  inputRef.current = input;
+  loadingRef.current = loading;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const sendMessage = useCallback(async () => {
-    const text = input.trim();
-    if (text === '' || loading) {
+    const text = inputRef.current.trim();
+    if (text === '' || loadingRef.current) {
       return;
     }
 
-    const userMessage: ChatMessage = { role: 'user', content: text };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
+    const userMessage: ChatMessage = { id: generateMessageId(), role: 'user', content: text };
     setInput('');
     setLoading(true);
+
+    let updatedMessages: ChatMessage[] = [];
+    setMessages((prev) => {
+      updatedMessages = [...prev, userMessage];
+      return updatedMessages;
+    });
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: updatedMessages }),
+        body: JSON.stringify({
+          messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
+        }),
       });
 
       const data: unknown = await res.json();
@@ -55,19 +73,19 @@ export function App() {
       }
 
       const content = getStringField(data, 'content') ?? '(No response)';
-      setMessages(prev => [...prev, { role: 'assistant', content }]);
+      setMessages(prev => [...prev, { id: generateMessageId(), role: 'assistant', content }]);
     }
     catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       setMessages(prev => [
         ...prev,
-        { role: 'assistant', content: `Error: ${message}` },
+        { id: generateMessageId(), role: 'assistant', content: `Error: ${message}` },
       ]);
     }
     finally {
       setLoading(false);
     }
-  }, [input, loading, messages]);
+  }, []);
 
   const handleSubmit = useCallback((e: React.SyntheticEvent) => {
     e.preventDefault();
@@ -85,8 +103,8 @@ export function App() {
             Send a message to manage your TODOs.
           </div>
         )}
-        {messages.map((msg, i) => (
-          <div key={i} className={`chat-message chat-message-${msg.role}`}>
+        {messages.map(msg => (
+          <div key={msg.id} className={`chat-message chat-message-${msg.role}`}>
             <div className="chat-message-role">
               {msg.role === 'user' ? 'You' : 'Assistant'}
             </div>
