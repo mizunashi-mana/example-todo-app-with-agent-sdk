@@ -1,5 +1,14 @@
 import { Hono } from 'hono';
-import { AgentError, createTodoAgent, type AgentOptions, type ChatMessage, type ChatOptions } from '#agent';
+import {
+  AgentError,
+  createTodoAgent,
+  type AgentOptions,
+  type ChatMessage,
+  type ChatOptions,
+  type TextMessage,
+  type ToolCallMessage,
+  type ToolResultMessage,
+} from '#agent';
 import { errorResponse } from './errors.js';
 import type { TodoStorage } from '#storage';
 
@@ -9,15 +18,50 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function isChatMessage(value: unknown): value is ChatMessage {
+function isTextMessage(value: unknown): value is TextMessage {
   if (!isRecord(value)) return false;
   return (value.role === 'user' || value.role === 'assistant')
     && typeof value.content === 'string'
     && value.content.trim() !== '';
 }
 
+function isToolCallArray(value: unknown): value is ToolCallMessage['toolCalls'] {
+  if (!Array.isArray(value)) return false;
+  return value.every(
+    (item: unknown) =>
+      isRecord(item)
+      && typeof item.toolCallId === 'string'
+      && typeof item.toolName === 'string'
+      && isRecord(item.args),
+  );
+}
+
+function isToolResultArray(value: unknown): value is ToolResultMessage['toolResults'] {
+  if (!Array.isArray(value)) return false;
+  return value.every(
+    (item: unknown) =>
+      isRecord(item)
+      && typeof item.toolCallId === 'string'
+      && typeof item.toolName === 'string',
+  );
+}
+
+function isToolCallMessage(value: unknown): value is ToolCallMessage {
+  if (!isRecord(value)) return false;
+  return value.role === 'assistant' && isToolCallArray(value.toolCalls);
+}
+
+function isToolResultMessage(value: unknown): value is ToolResultMessage {
+  if (!isRecord(value)) return false;
+  return value.role === 'tool' && isToolResultArray(value.toolResults);
+}
+
+function isChatMessage(value: unknown): value is ChatMessage {
+  return isTextMessage(value) || isToolCallMessage(value) || isToolResultMessage(value);
+}
+
 export function createApp(storage: TodoStorage, options?: AppOptions) {
-  const agent = createTodoAgent(storage, options);
+  const agent = createTodoAgent(options);
   const app = new Hono();
 
   // --- TODO REST API ---
@@ -128,7 +172,7 @@ export function createApp(storage: TodoStorage, options?: AppOptions) {
       if (!isChatMessage(msg)) {
         return errorResponse(
           c, 400, 'VALIDATION_ERROR',
-          'Each message must have role ("user" or "assistant") and a non-empty content string',
+          'Each message must be a text message (role + content), tool call message (role + toolCalls), or tool result message (role + toolResults)',
         );
       }
       validatedMessages.push(msg);
@@ -141,7 +185,7 @@ export function createApp(storage: TodoStorage, options?: AppOptions) {
 
     try {
       const response = await agent.chat(validatedMessages, chatOptions);
-      return c.json({ role: 'assistant', content: response });
+      return c.json(response);
     }
     catch (e) {
       if (e instanceof AgentError) {

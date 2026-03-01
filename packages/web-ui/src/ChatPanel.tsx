@@ -1,21 +1,61 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { TodoPanelHandle } from './TodoPanel.js';
 
-interface ChatMessage {
-  id: string;
+// --- API message types ---
+
+interface TextApiMessage {
   role: 'user' | 'assistant';
   content: string;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+interface ToolCallApiMessage {
+  role: 'assistant';
+  toolCalls: Array<{
+    toolCallId: string;
+    toolName: string;
+    args: Record<string, unknown>;
+  }>;
 }
 
-function getStringField(data: unknown, field: string): string | undefined {
-  if (isRecord(data) && field in data) {
-    const value = data[field];
-    return typeof value === 'string' ? value : undefined;
-  }
-  return undefined;
+interface ToolResultApiMessage {
+  role: 'tool';
+  toolResults: Array<{
+    toolCallId: string;
+    toolName: string;
+    result: unknown;
+  }>;
+}
+
+type ApiMessage = TextApiMessage | ToolCallApiMessage | ToolResultApiMessage;
+
+interface ToolCallsResponse {
+  type: 'tool_calls';
+  toolCalls: Array<{
+    toolCallId: string;
+    toolName: string;
+    args: Record<string, unknown>;
+  }>;
+}
+
+interface TextResponse {
+  type: 'text';
+  content: string;
+}
+
+type ChatApiResponse = ToolCallsResponse | TextResponse;
+
+// --- Display message ---
+
+interface DisplayMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+// --- Helpers ---
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
 function getErrorMessage(data: unknown): string | undefined {
@@ -24,28 +64,79 @@ function getErrorMessage(data: unknown): string | undefined {
   if (isRecord(error) && typeof error.message === 'string') {
     return error.message;
   }
-  // Fallback for legacy format
   if (typeof data.error === 'string') return data.error;
   return undefined;
+}
+
+function isChatApiResponse(data: unknown): data is ChatApiResponse {
+  if (!isRecord(data)) return false;
+  if (data.type === 'text' && typeof data.content === 'string') return true;
+  if (data.type === 'tool_calls' && Array.isArray(data.toolCalls)) return true;
+  return false;
 }
 
 interface OllamaModel {
   name: string;
 }
 
+// --- Tool execution ---
+
+function getString(value: unknown): string {
+  if (typeof value === 'string') return value;
+  return '';
+}
+
+function getOptionalString(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+async function executeToolCall(
+  todoPanel: TodoPanelHandle,
+  toolName: string,
+  args: Record<string, unknown>,
+): Promise<unknown> {
+  switch (toolName) {
+    case 'addTodo':
+      return todoPanel.animateAddTodo(
+        getString(args.title),
+        getOptionalString(args.description),
+      );
+    case 'listTodos':
+      return todoPanel.animateListTodos();
+    case 'editTodo':
+      return todoPanel.animateEditTodo(
+        getString(args.id),
+        {
+          title: getOptionalString(args.title),
+          description: getOptionalString(args.description),
+        },
+      );
+    case 'toggleTodoStatus':
+      return todoPanel.animateToggleStatus(getString(args.id));
+    case 'deleteTodo':
+      return todoPanel.animateDeleteTodo(getString(args.id));
+    default:
+      return { error: `Unknown tool: ${toolName}` };
+  }
+}
+
+// --- Component ---
+
 interface ChatPanelProps {
-  onChatResponse?: () => void;
+  todoPanelRef: React.RefObject<TodoPanelHandle | null>;
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention -- React component
-export function ChatPanel({ onChatResponse }: ChatPanelProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+export function ChatPanel({ todoPanelRef }: ChatPanelProps) {
+  const [displayMessages, setDisplayMessages] = useState<DisplayMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [models, setModels] = useState<OllamaModel[]>([]);
   const [selectedModel, setSelectedModel] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesRef = useRef<ChatMessage[]>([]);
+
+  // API message history (includes tool call/result messages for LLM context)
+  const apiMessagesRef = useRef<ApiMessage[]>([]);
   const inputRef = useRef<string>('');
   const loadingRef = useRef<boolean>(false);
   const selectedModelRef = useRef<string>('');
@@ -56,7 +147,6 @@ export function ChatPanel({ onChatResponse }: ChatPanelProps) {
     return `msg-${String(nextIdRef.current)}`;
   }
 
-  messagesRef.current = messages;
   inputRef.current = input;
   loadingRef.current = loading;
   selectedModelRef.current = selectedModel;
@@ -82,7 +172,28 @@ export function ChatPanel({ onChatResponse }: ChatPanelProps) {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [displayMessages]);
+
+  const callChatApi = useCallback(async (messages: ApiMessage[]): Promise<ChatApiResponse> => {
+    const body: Record<string, unknown> = { messages };
+    if (selectedModelRef.current !== '') {
+      body.model = selectedModelRef.current;
+    }
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    const data: unknown = await res.json();
+    if (!res.ok) {
+      throw new Error(getErrorMessage(data) ?? `HTTP ${String(res.status)}`);
+    }
+    if (!isChatApiResponse(data)) {
+      throw new Error('Invalid response from chat API');
+    }
+    return data;
+  }, []);
 
   const sendMessage = useCallback(async () => {
     const text = inputRef.current.trim();
@@ -90,42 +201,69 @@ export function ChatPanel({ onChatResponse }: ChatPanelProps) {
       return;
     }
 
-    const userMessage: ChatMessage = {
-      id: generateId(),
-      role: 'user',
-      content: text,
-    };
-    const updatedMessages = [...messagesRef.current, userMessage];
-    setMessages(updatedMessages);
+    const userMsg: TextApiMessage = { role: 'user', content: text };
+    apiMessagesRef.current = [...apiMessagesRef.current, userMsg];
+
+    setDisplayMessages(prev => [...prev, { id: generateId(), role: 'user', content: text }]);
     setInput('');
     setLoading(true);
 
     try {
-      const body: Record<string, unknown> = {
-        messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
-      };
-      if (selectedModelRef.current !== '') {
-        body.model = selectedModelRef.current;
+      let currentMessages = [...apiMessagesRef.current];
+      let response = await callChatApi(currentMessages);
+
+      // Tool execution loop
+      while (response.type === 'tool_calls') {
+        const { toolCalls } = response;
+
+        // Add assistant tool call message to API history
+        const toolCallMsg: ToolCallApiMessage = { role: 'assistant', toolCalls };
+        currentMessages = [...currentMessages, toolCallMsg];
+
+        // Show tool execution status
+        const toolNames = toolCalls.map(tc => tc.toolName).join(', ');
+        setDisplayMessages(prev => [
+          ...prev,
+          { id: generateId(), role: 'system', content: `Executing: ${toolNames}...` },
+        ]);
+
+        // Execute each tool call via TodoPanel
+        const todoPanel = todoPanelRef.current;
+        if (!todoPanel) {
+          throw new Error('TodoPanel not available');
+        }
+
+        const toolResults: ToolResultApiMessage['toolResults'] = [];
+        for (const tc of toolCalls) {
+          const result = await executeToolCall(todoPanel, tc.toolName, tc.args);
+          toolResults.push({
+            toolCallId: tc.toolCallId,
+            toolName: tc.toolName,
+            result,
+          });
+        }
+
+        // Add tool results to API history
+        const toolResultMsg: ToolResultApiMessage = { role: 'tool', toolResults };
+        currentMessages = [...currentMessages, toolResultMsg];
+
+        // Continue the conversation with tool results
+        response = await callChatApi(currentMessages);
       }
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
 
-      const data: unknown = await res.json();
-
-      if (!res.ok) {
-        throw new Error(getErrorMessage(data) ?? `HTTP ${String(res.status)}`);
-      }
-
-      const content = getStringField(data, 'content') ?? '(No response)';
-      setMessages(prev => [...prev, { id: generateId(), role: 'assistant', content }]);
-      onChatResponse?.();
+      // Final text response
+      apiMessagesRef.current = [
+        ...currentMessages,
+        { role: 'assistant', content: response.content },
+      ];
+      setDisplayMessages(prev => [
+        ...prev,
+        { id: generateId(), role: 'assistant', content: response.content },
+      ]);
     }
     catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
-      setMessages(prev => [
+      setDisplayMessages(prev => [
         ...prev,
         { id: generateId(), role: 'assistant', content: `Error: ${message}` },
       ]);
@@ -133,7 +271,7 @@ export function ChatPanel({ onChatResponse }: ChatPanelProps) {
     finally {
       setLoading(false);
     }
-  }, [onChatResponse]);
+  }, [callChatApi, todoPanelRef]);
 
   const handleSubmit = useCallback((e: React.SyntheticEvent) => {
     e.preventDefault();
@@ -159,15 +297,15 @@ export function ChatPanel({ onChatResponse }: ChatPanelProps) {
         )}
       </header>
       <div className="chat-messages">
-        {messages.length === 0 && (
+        {displayMessages.length === 0 && (
           <div className="chat-empty">
             Send a message to manage your TODOs.
           </div>
         )}
-        {messages.map(msg => (
+        {displayMessages.map(msg => (
           <div key={msg.id} className={`chat-message chat-message-${msg.role}`}>
             <div className="chat-message-role">
-              {msg.role === 'user' ? 'You' : 'Assistant'}
+              {msg.role === 'user' ? 'You' : msg.role === 'system' ? 'System' : 'Assistant'}
             </div>
             <div className="chat-message-content">{msg.content}</div>
           </div>
