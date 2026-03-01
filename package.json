@@ -6,7 +6,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -w @example-todo-app/eslint-config && npm run build -w @example-todo-app/todo-app",
+    "build": "npm run build -w @example-todo-app/eslint-config && npm run build -w @example-todo-app/todo-app && npm run build -w @example-todo-app/web-ui",
     "lint": "prek run --all-files",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
