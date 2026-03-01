@@ -1,5 +1,3 @@
-export const APP_NAME = 'example-todo-app';
-
 export {
   createTodo,
   todoIdSchema,
@@ -8,4 +6,4 @@ export {
   type Todo,
   type TodoId,
   type TodoStatus,
-} from './models/index.js';
+} from './todo.js';
