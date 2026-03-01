@@ -13,7 +13,7 @@ Phase 5: 品質・完成度向上 — サンプルプロジェクトとしての
 - モノレポ構成のセットアップ（npm workspaces）
 - 共有 ESLint 設定パッケージの作成
 - GitHub Actions CI（ci-lint, ci-test）
-- Agent SDK の選定調査 → Vercel AI SDK v6 に決定
+- Agent SDK の選定調査 → Vercel AI SDK v6 に決定（調査: `.ai-agent/surveys/20260301-js-agent-sdk-comparison/`）
 - TODO データモデルの設計（Zod スキーマ + TypeScript 型）
 
 ### Phase 2: コア機能実装

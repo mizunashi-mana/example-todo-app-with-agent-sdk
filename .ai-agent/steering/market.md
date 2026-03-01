@@ -16,9 +16,9 @@ Ollama + Vercel AI SDK v6 による実践的な学習リソースとしての役
 | プロジェクト | 特徴 | 備考 |
 |---|---|---|
 | Vercel AI SDK 公式サンプル | フレームワーク固有、最小限のコード例が中心 | SDK v6 の Agent 抽象化を使ったサンプルが充実してきている |
-| Mastra テンプレート | TypeScript ネイティブ、RAG・オブザーバビリティ内蔵 | 2026 年に登場した新興フレームワーク |
+| Mastra テンプレート | TypeScript ネイティブ、RAG・オブザーバビリティ内蔵 | 2025 年初頭に登場した新興フレームワーク |
 | Google ADK サンプル | 多言語対応（Python, TS, Go, Java）、Google エコシステム連携 | 2026 年に TS 対応が追加 |
-| OpenAI Agents SDK サンプル | マルチエージェント・音声エージェント対応 | 週間 12.8 万 DL、急成長中 |
+| OpenAI Agents SDK サンプル | マルチエージェント・音声エージェント対応 | 週間約 29 万 DL、急成長中 |
 | LangChain.js テンプレート | LangChain エコシステム特化、複雑になりがち | LangGraph.js は週間 52.9 万 DL で根強い利用 |
 | 各種ブログ記事・チュートリアル | 断片的、メンテナンスされない | ― |
 
@@ -30,7 +30,7 @@ Ollama + Vercel AI SDK v6 による実践的な学習リソースとしての役
 - Vercel AI SDK v6 の Agent 抽象化を活用した実践的な実装例
 - 手動操作 UI + AI チャット補助の両方を備え、エージェント導入パターンを示す
 
-## 市場動向
+## 市場動向（2026 年 3 月時点）
 
 - **ローカル LLM の急速な進化**: Llama 4, Gemma 3, DeepSeek V3.2, Qwen3 等が登場し、ローカル LLM の性能がクラウド級に到達
 - **Ollama の普及**: GitHub 10 万スター超え、ネイティブ tool-calling / thinking モード対応、Ollama Cloud（ハイブリッド）登場
