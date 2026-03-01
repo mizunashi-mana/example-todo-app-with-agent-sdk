@@ -16,9 +16,11 @@ export { InMemoryTodoStorage, type TodoStorage } from './storage/index.js';
 export { createTodoTools } from './tools/index.js';
 
 export {
+  AgentError,
   createTodoAgent,
+  type AgentErrorCode,
   type AgentOptions,
   type ChatMessage,
 } from './agent/index.js';
 
-export { createApp, type AppOptions } from './server/index.js';
+export { createApp, type AppOptions, errorResponse, type ErrorCode } from './server/index.js';

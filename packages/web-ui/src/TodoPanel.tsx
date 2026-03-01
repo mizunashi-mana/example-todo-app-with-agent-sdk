@@ -13,6 +13,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+function getErrorMessage(data: unknown): string | undefined {
+  if (!isRecord(data)) return undefined;
+  const error = data.error;
+  if (isRecord(error) && typeof error.message === 'string') {
+    return error.message;
+  }
+  if (typeof data.error === 'string') return data.error;
+  return undefined;
+}
+
 function isTodo(value: unknown): value is Todo {
   return isRecord(value)
     && typeof value.id === 'string'
@@ -81,12 +91,15 @@ export function TodoPanel({ ref }: TodoPanelProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title }),
       });
-      if (!res.ok) throw new Error('Failed to create TODO');
+      if (!res.ok) {
+        const data: unknown = await res.json().catch(() => null);
+        throw new Error(getErrorMessage(data) ?? 'Failed to create TODO');
+      }
       setNewTitle('');
       void fetchTodos();
     }
-    catch {
-      setError('Failed to create TODO');
+    catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create TODO');
     }
   }, [newTitle, fetchTodos]);
 
@@ -98,11 +111,14 @@ export function TodoPanel({ ref }: TodoPanelProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (!res.ok) throw new Error('Failed to update TODO');
+      if (!res.ok) {
+        const data: unknown = await res.json().catch(() => null);
+        throw new Error(getErrorMessage(data) ?? 'Failed to update TODO');
+      }
       void fetchTodos();
     }
-    catch {
-      setError('Failed to update TODO');
+    catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update TODO');
     }
   }, [fetchTodos]);
 
@@ -126,24 +142,30 @@ export function TodoPanel({ ref }: TodoPanelProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title }),
       });
-      if (!res.ok) throw new Error('Failed to update TODO');
+      if (!res.ok) {
+        const data: unknown = await res.json().catch(() => null);
+        throw new Error(getErrorMessage(data) ?? 'Failed to update TODO');
+      }
       setEditingId(null);
       setEditTitle('');
       void fetchTodos();
     }
-    catch {
-      setError('Failed to update TODO');
+    catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update TODO');
     }
   }, [editTitle, fetchTodos]);
 
   const handleDelete = useCallback(async (id: string) => {
     try {
       const res = await fetch(`/api/todos/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete TODO');
+      if (!res.ok) {
+        const data: unknown = await res.json().catch(() => null);
+        throw new Error(getErrorMessage(data) ?? 'Failed to delete TODO');
+      }
       void fetchTodos();
     }
-    catch {
-      setError('Failed to delete TODO');
+    catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete TODO');
     }
   }, [fetchTodos]);
 
