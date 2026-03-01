@@ -28,9 +28,25 @@
 │       ├── autodev-start-new-task/
 │       ├── autodev-steering/
 │       └── autodev-switch-to-default/
+├── .github/
+│   └── workflows/              # GitHub Actions CI
+│       ├── ci-lint.yml         # lint ワークフロー
+│       └── ci-test.yml         # テストワークフロー
+├── packages/                   # モノレポパッケージ群（npm workspaces）
+│   ├── eslint-config/          # 共有 ESLint 設定パッケージ
+│   ├── todo-app/               # TODO アプリ本体（バックエンド）
+│   └── web-ui/                 # Web フロントエンド（React SPA）
+├── scripts/                    # 開発用ヘルパースクリプト
+│   ├── cc-edit-lint-hook.mjs   # Claude Code 編集時の lint hook
+│   └── run-script.mjs          # pre-commit hook 用スクリプトランナー
 ├── .envrc                      # direnv 設定
 ├── .gitignore                  # Git 除外設定
 ├── .pre-commit-config.yaml     # pre-commit フック設定（Nix 管理）
+├── CLAUDE.md                   # Claude Code プロジェクト設定
+├── LICENSE                     # ライセンス（Apache-2.0 OR MPL-2.0）
+├── eslint.config.js            # ルート ESLint 設定
+├── package.json                # ルート package.json（workspaces 定義）
+├── package-lock.json           # npm ロックファイル
 ├── devenv.nix                  # devenv 開発環境設定
 ├── devenv.yaml                 # devenv 入力ソース設定
 └── devenv.lock                 # devenv ロックファイル
@@ -65,6 +81,16 @@ Claude Code で利用可能な autodev スキル群。各スキルは `SKILL.md`
 | `autodev-steering` | Steering ドキュメントの更新 |
 | `autodev-switch-to-default` | デフォルトブランチへの切り替え |
 
+### `packages/`
+
+npm workspaces によるモノレポ構成。
+
+| パッケージ | 説明 |
+|---|---|
+| `eslint-config` | 共有 ESLint 設定。tsup でビルド、他パッケージから `@example-todo-app/eslint-config` として参照 |
+| `todo-app` | TODO アプリ本体。Hono HTTP サーバ、Vercel AI SDK + Ollama によるエージェント、InMemoryTodoStorage |
+| `web-ui` | React SPA フロントエンド。Vite でビルド。TODO 一覧（メイン）+ チャットサイドバーの 2 カラムレイアウト |
+
 ### 開発環境
 
 devenv (Nix) + direnv による再現可能な開発環境。
@@ -75,9 +101,11 @@ devenv (Nix) + direnv による再現可能な開発環境。
 
 ## アーキテクチャパターン
 
-- **モノレポ構成**: `packages/` 配下に各パッケージを配置予定（npm workspaces）
-- devenv.nix で `packages/eslint-config` と `packages/mcp-html-artifacts-preview` 向けの eslint フックが定義済み
+- **モノレポ構成**: `packages/` 配下に各パッケージを配置（npm workspaces）
+- devenv.nix で `packages/eslint-config`, `packages/todo-app`, `packages/web-ui` 向けの eslint フックが定義済み
 
 ## テスト構成
 
-未構築（Agent SDK 選定後に決定予定）
+- **vitest** によるユニットテスト（`packages/todo-app` に設定済み）
+- テスト対象: モデル（Zod スキーマ）、ストレージ（InMemoryTodoStorage）、ツール（Agent ツール定義）
+- CI: GitHub Actions `ci-test.yml` で自動実行
