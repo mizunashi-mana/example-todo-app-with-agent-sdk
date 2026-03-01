@@ -208,12 +208,18 @@ export function ChatPanel({ todoPanelRef }: ChatPanelProps) {
     setInput('');
     setLoading(true);
 
+    let currentMessages = [...apiMessagesRef.current];
     try {
-      let currentMessages = [...apiMessagesRef.current];
       let response = await callChatApi(currentMessages);
 
       // Tool execution loop
+      const MAX_TOOL_ROUNDS = 10;
+      let round = 0;
       while (response.type === 'tool_calls') {
+        round += 1;
+        if (round > MAX_TOOL_ROUNDS) {
+          throw new Error('Too many tool execution rounds');
+        }
         const { toolCalls } = response;
 
         // Add assistant tool call message to API history
@@ -262,6 +268,7 @@ export function ChatPanel({ todoPanelRef }: ChatPanelProps) {
       ]);
     }
     catch (err) {
+      apiMessagesRef.current = currentMessages;
       const message = err instanceof Error ? err.message : 'Unknown error';
       setDisplayMessages(prev => [
         ...prev,

@@ -42,7 +42,8 @@ function isToolResultArray(value: unknown): value is ToolResultMessage['toolResu
     (item: unknown) =>
       isRecord(item)
       && typeof item.toolCallId === 'string'
-      && typeof item.toolName === 'string',
+      && typeof item.toolName === 'string'
+      && 'result' in item,
   );
 }
 

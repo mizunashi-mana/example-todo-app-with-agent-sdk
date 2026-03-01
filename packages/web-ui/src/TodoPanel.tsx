@@ -81,7 +81,7 @@ export function TodoPanel({ ref }: TodoPanelProps) {
   }, []);
 
   const agentActions = useTodoAgentActions({
-    panelRef, createInputRef, todos, fetchTodos,
+    panelRef, createInputRef, fetchTodos,
     setNewTitle, setEditingId, setEditTitle, setError,
   });
 

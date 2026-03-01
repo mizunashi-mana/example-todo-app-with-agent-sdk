@@ -86,7 +86,6 @@ function toTodoResult(todo: Todo): TodoResult {
 interface AgentActionDeps {
   panelRef: React.RefObject<HTMLDivElement | null>;
   createInputRef: React.RefObject<HTMLInputElement | null>;
-  todos: Todo[];
   fetchTodos: () => Promise<Todo[]>;
   setNewTitle: (title: string) => void;
   setEditingId: (id: string | null) => void;
@@ -96,7 +95,7 @@ interface AgentActionDeps {
 
 export function useTodoAgentActions(deps: AgentActionDeps) {
   const {
-    panelRef, createInputRef, todos, fetchTodos,
+    panelRef, createInputRef, fetchTodos,
     setNewTitle, setEditingId, setEditTitle, setError,
   } = deps;
 
@@ -131,7 +130,7 @@ export function useTodoAgentActions(deps: AgentActionDeps) {
 
       if (isTodo(created)) {
         await delay(100);
-        const newItem = panel?.querySelector(`[data-todo-id="${created.id}"]`);
+        const newItem = panel?.querySelector(`[data-todo-id="${CSS.escape(created.id)}"]`);
         if (newItem) await flashElement(newItem);
         return toTodoResult(created);
       }
@@ -149,13 +148,15 @@ export function useTodoAgentActions(deps: AgentActionDeps) {
 
   const animateToggleStatus = useCallback(async (id: string): Promise<TodoActionResult> => {
     const panel = panelRef.current;
-    const todoEl = panel?.querySelector(`[data-todo-id="${id}"]`);
+    const escapedId = CSS.escape(id);
+    const todoEl = panel?.querySelector(`[data-todo-id="${escapedId}"]`);
     const checkbox = todoEl?.querySelector('.todo-checkbox');
 
     if (todoEl) await highlightElement(todoEl);
     if (checkbox) await highlightElement(checkbox);
 
-    const todo = todos.find(t => t.id === id);
+    const currentTodos = await fetchTodos();
+    const todo = currentTodos.find(t => t.id === id);
     if (!todo) return { error: `TODO with id ${id} not found` };
     const newStatus = todo.status === 'pending' ? 'completed' : 'pending';
 
@@ -182,14 +183,15 @@ export function useTodoAgentActions(deps: AgentActionDeps) {
       setError(msg);
       return { error: msg };
     }
-  }, [panelRef, todos, fetchTodos, setError]);
+  }, [panelRef, fetchTodos, setError]);
 
   const animateEditTodo = useCallback(async (
     id: string,
     fields: { title?: string; description?: string },
   ): Promise<TodoActionResult> => {
     const panel = panelRef.current;
-    const todoEl = panel?.querySelector(`[data-todo-id="${id}"]`);
+    const escapedId = CSS.escape(id);
+    const todoEl = panel?.querySelector(`[data-todo-id="${escapedId}"]`);
 
     if (todoEl) await highlightElement(todoEl);
     const editBtn = todoEl?.querySelector('.todo-edit-btn');
@@ -200,7 +202,7 @@ export function useTodoAgentActions(deps: AgentActionDeps) {
     await delay(ANIMATION_DELAY);
 
     await delay(100);
-    const saveBtn = panel?.querySelector(`[data-todo-id="${id}"] .todo-save-btn`);
+    const saveBtn = panel?.querySelector(`[data-todo-id="${escapedId}"] .todo-save-btn`);
     if (saveBtn) await highlightElement(saveBtn);
 
     const updateBody: Record<string, string> = {};
@@ -227,7 +229,7 @@ export function useTodoAgentActions(deps: AgentActionDeps) {
       await fetchTodos();
 
       await delay(100);
-      const updatedEl = panel?.querySelector(`[data-todo-id="${id}"]`);
+      const updatedEl = panel?.querySelector(`[data-todo-id="${escapedId}"]`);
       if (updatedEl) await flashElement(updatedEl);
 
       if (isTodo(updated)) return toTodoResult(updated);
@@ -244,7 +246,8 @@ export function useTodoAgentActions(deps: AgentActionDeps) {
 
   const animateDeleteTodo = useCallback(async (id: string): Promise<DeleteActionResult> => {
     const panel = panelRef.current;
-    const todoEl = panel?.querySelector(`[data-todo-id="${id}"]`);
+    const escapedId = CSS.escape(id);
+    const todoEl = panel?.querySelector(`[data-todo-id="${escapedId}"]`);
 
     if (todoEl) await highlightElement(todoEl);
     const deleteBtn = todoEl?.querySelector('.todo-delete-btn');
