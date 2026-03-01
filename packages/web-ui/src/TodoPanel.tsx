@@ -75,7 +75,7 @@ export function TodoPanel({ ref }: TodoPanelProps) {
       return fetched;
     }
     catch {
-      setError('Failed to load TODOs');
+      setError('TODO の読み込みに失敗しました');
       return [];
     }
   }, []);
@@ -110,13 +110,13 @@ export function TodoPanel({ ref }: TodoPanelProps) {
       });
       if (!res.ok) {
         const data: unknown = await res.json().catch(() => null);
-        throw new Error(getErrorMessage(data) ?? 'Failed to create TODO');
+        throw new Error(getErrorMessage(data) ?? 'TODO の作成に失敗しました');
       }
       setNewTitle('');
       void fetchTodos();
     }
     catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create TODO');
+      setError(err instanceof Error ? err.message : 'TODO の作成に失敗しました');
     }
   }, [newTitle, fetchTodos]);
 
@@ -130,12 +130,12 @@ export function TodoPanel({ ref }: TodoPanelProps) {
       });
       if (!res.ok) {
         const data: unknown = await res.json().catch(() => null);
-        throw new Error(getErrorMessage(data) ?? 'Failed to update TODO');
+        throw new Error(getErrorMessage(data) ?? 'TODO の更新に失敗しました');
       }
       void fetchTodos();
     }
     catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update TODO');
+      setError(err instanceof Error ? err.message : 'TODO の更新に失敗しました');
     }
   }, [fetchTodos]);
 
@@ -160,30 +160,30 @@ export function TodoPanel({ ref }: TodoPanelProps) {
       });
       if (!res.ok) {
         const data: unknown = await res.json().catch(() => null);
-        throw new Error(getErrorMessage(data) ?? 'Failed to update TODO');
+        throw new Error(getErrorMessage(data) ?? 'TODO の更新に失敗しました');
       }
       setEditingId(null);
       setEditTitle('');
       void fetchTodos();
     }
     catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update TODO');
+      setError(err instanceof Error ? err.message : 'TODO の更新に失敗しました');
     }
   }, [editTitle, fetchTodos]);
 
   const handleDelete = useCallback(async (id: string) => {
     // eslint-disable-next-line no-alert -- intentional confirm dialog for destructive action
-    if (!window.confirm('Are you sure you want to delete this TODO?')) return;
+    if (!window.confirm('この TODO を削除しますか？')) return;
     try {
       const res = await fetch(`/api/todos/${id}`, { method: 'DELETE' });
       if (!res.ok) {
         const data: unknown = await res.json().catch(() => null);
-        throw new Error(getErrorMessage(data) ?? 'Failed to delete TODO');
+        throw new Error(getErrorMessage(data) ?? 'TODO の削除に失敗しました');
       }
       void fetchTodos();
     }
     catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete TODO');
+      setError(err instanceof Error ? err.message : 'TODO の削除に失敗しました');
     }
   }, [fetchTodos]);
 
@@ -197,7 +197,7 @@ export function TodoPanel({ ref }: TodoPanelProps) {
         <span className="todo-count">
           {String(pendingTodos.length)}
           {' '}
-          pending
+          件 未完了
         </span>
       </header>
 
@@ -205,7 +205,7 @@ export function TodoPanel({ ref }: TodoPanelProps) {
         <div className="todo-error">
           {error}
           <button type="button" className="todo-error-dismiss" onClick={() => { setError(null); }}>
-            Dismiss
+            閉じる
           </button>
         </div>
       )}
@@ -217,16 +217,16 @@ export function TodoPanel({ ref }: TodoPanelProps) {
           type="text"
           value={newTitle}
           onChange={(e) => { setNewTitle(e.target.value); }}
-          placeholder="Add a new TODO..."
+          placeholder="新しい TODO を入力..."
         />
         <button className="todo-create-btn" type="submit" disabled={newTitle.trim() === ''}>
-          Add
+          追加
         </button>
       </form>
 
       <div className="todo-list">
         {pendingTodos.length === 0 && completedTodos.length === 0 && (
-          <div className="todo-empty">No TODOs yet. Add one above or use the chat.</div>
+          <div className="todo-empty">TODO はまだありません。上のフォームかチャットから追加してください。</div>
         )}
 
         {pendingTodos.map(todo => (
@@ -235,7 +235,7 @@ export function TodoPanel({ ref }: TodoPanelProps) {
               type="button"
               className="todo-checkbox"
               onClick={() => { void handleToggleStatus(todo); }}
-              aria-label="Mark as completed"
+              aria-label="完了にする"
               disabled={editingId === todo.id}
             />
             {editingId === todo.id
@@ -255,9 +255,9 @@ export function TodoPanel({ ref }: TodoPanelProps) {
                       onChange={(e) => { setEditTitle(e.target.value); }}
                       onKeyDown={(e) => { if (e.key === 'Escape') handleCancelEdit(); }}
                     />
-                    <button className="todo-action-btn todo-save-btn" type="submit" disabled={editTitle.trim() === ''}>Save</button>
+                    <button className="todo-action-btn todo-save-btn" type="submit" disabled={editTitle.trim() === ''}>保存</button>
                     <button className="todo-action-btn todo-cancel-btn" type="button" onClick={handleCancelEdit}>
-                      Cancel
+                      キャンセル
                     </button>
                   </form>
                 )
@@ -270,14 +270,14 @@ export function TodoPanel({ ref }: TodoPanelProps) {
                         type="button"
                         onClick={() => { handleStartEdit(todo); }}
                       >
-                        Edit
+                        編集
                       </button>
                       <button
                         className="todo-action-btn todo-delete-btn"
                         type="button"
                         onClick={() => { void handleDelete(todo.id); }}
                       >
-                        Delete
+                        削除
                       </button>
                     </div>
                   </>
@@ -287,14 +287,14 @@ export function TodoPanel({ ref }: TodoPanelProps) {
 
         {completedTodos.length > 0 && (
           <>
-            <div className="todo-section-label">Completed</div>
+            <div className="todo-section-label">完了済み</div>
             {completedTodos.map(todo => (
               <div key={todo.id} className="todo-item todo-item-completed" data-todo-id={todo.id}>
                 <button
                   type="button"
                   className="todo-checkbox todo-checkbox-checked"
                   onClick={() => { void handleToggleStatus(todo); }}
-                  aria-label="Mark as pending"
+                  aria-label="未完了に戻す"
                 />
                 <span className="todo-title todo-title-completed">{todo.title}</span>
                 <div className="todo-actions">
@@ -303,7 +303,7 @@ export function TodoPanel({ ref }: TodoPanelProps) {
                     type="button"
                     onClick={() => { void handleDelete(todo.id); }}
                   >
-                    Delete
+                    削除
                   </button>
                 </div>
               </div>
