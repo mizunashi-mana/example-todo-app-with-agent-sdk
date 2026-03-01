@@ -1,8 +1,17 @@
 export {
   AgentError,
   createTodoAgent,
+  isTextMessage,
+  isToolCallMessage,
+  isToolResultMessage,
   type AgentErrorCode,
   type AgentOptions,
   type ChatMessage,
   type ChatOptions,
+  type ChatResponse,
+  type ChatTextResponse,
+  type ChatToolCallsResponse,
+  type TextMessage,
+  type ToolCallMessage,
+  type ToolResultMessage,
 } from './todo-agent.js';

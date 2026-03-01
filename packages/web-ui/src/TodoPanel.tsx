@@ -1,4 +1,10 @@
 import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import {
+  useTodoAgentActions,
+  type DeleteActionResult,
+  type TodoActionResult,
+  type TodoListResult,
+} from './useTodoAgentActions.js';
 
 interface Todo {
   id: string;
@@ -37,6 +43,11 @@ function parseTodos(data: unknown): Todo[] {
 
 export interface TodoPanelHandle {
   refresh: () => void;
+  animateAddTodo: (title: string, description?: string) => Promise<TodoActionResult>;
+  animateToggleStatus: (id: string) => Promise<TodoActionResult>;
+  animateEditTodo: (id: string, fields: { title?: string; description?: string }) => Promise<TodoActionResult>;
+  animateDeleteTodo: (id: string) => Promise<DeleteActionResult>;
+  animateListTodos: () => Promise<TodoListResult>;
 }
 
 interface TodoPanelProps {
@@ -51,40 +62,46 @@ export function TodoPanel({ ref }: TodoPanelProps) {
   const [editTitle, setEditTitle] = useState('');
   const [error, setError] = useState<string | null>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const createInputRef = useRef<HTMLInputElement>(null);
 
-  const fetchTodos = useCallback(async () => {
+  const fetchTodos = useCallback(async (): Promise<Todo[]> => {
     try {
       const res = await fetch('/api/todos');
       const data: unknown = await res.json();
-      setTodos(parseTodos(data));
+      const fetched = parseTodos(data);
+      setTodos(fetched);
       setError(null);
+      return fetched;
     }
     catch {
       setError('Failed to load TODOs');
+      return [];
     }
   }, []);
 
+  const agentActions = useTodoAgentActions({
+    panelRef, createInputRef, fetchTodos,
+    setNewTitle, setEditingId, setEditTitle, setError,
+  });
+
   useImperativeHandle(ref, () => ({
-    refresh() {
-      void fetchTodos();
-    },
-  }), [fetchTodos]);
+    refresh() { void fetchTodos(); },
+    ...agentActions,
+  }), [fetchTodos, agentActions]);
 
   useEffect(() => {
     void fetchTodos();
   }, [fetchTodos]);
 
   useEffect(() => {
-    if (editingId !== null) {
-      editInputRef.current?.focus();
-    }
+    if (editingId !== null) editInputRef.current?.focus();
   }, [editingId]);
 
   const handleCreate = useCallback(async (e: React.SyntheticEvent) => {
     e.preventDefault();
     const title = newTitle.trim();
     if (title === '') return;
-
     try {
       const res = await fetch('/api/todos', {
         method: 'POST',
@@ -135,7 +152,6 @@ export function TodoPanel({ ref }: TodoPanelProps) {
   const handleSaveEdit = useCallback(async (id: string) => {
     const title = editTitle.trim();
     if (title === '') return;
-
     try {
       const res = await fetch(`/api/todos/${id}`, {
         method: 'PUT',
@@ -175,7 +191,7 @@ export function TodoPanel({ ref }: TodoPanelProps) {
   const completedTodos = todos.filter(t => t.status === 'completed');
 
   return (
-    <div className="todo-panel">
+    <div className="todo-panel" ref={panelRef}>
       <header className="todo-header">
         <h1>TODOs</h1>
         <span className="todo-count">
@@ -196,6 +212,7 @@ export function TodoPanel({ ref }: TodoPanelProps) {
 
       <form className="todo-create-form" onSubmit={(e) => { void handleCreate(e); }}>
         <input
+          ref={createInputRef}
           className="todo-create-input"
           type="text"
           value={newTitle}
@@ -213,7 +230,7 @@ export function TodoPanel({ ref }: TodoPanelProps) {
         )}
 
         {pendingTodos.map(todo => (
-          <div key={todo.id} className="todo-item">
+          <div key={todo.id} className="todo-item" data-todo-id={todo.id}>
             <button
               type="button"
               className="todo-checkbox"
@@ -272,7 +289,7 @@ export function TodoPanel({ ref }: TodoPanelProps) {
           <>
             <div className="todo-section-label">Completed</div>
             {completedTodos.map(todo => (
-              <div key={todo.id} className="todo-item todo-item-completed">
+              <div key={todo.id} className="todo-item todo-item-completed" data-todo-id={todo.id}>
                 <button
                   type="button"
                   className="todo-checkbox todo-checkbox-checked"

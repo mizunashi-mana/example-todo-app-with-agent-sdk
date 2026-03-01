@@ -372,3 +372,54 @@
   background: #ccc;
   cursor: not-allowed;
 }
+
+/* --- System messages (tool execution status) --- */
+
+.chat-message-system {
+  align-self: center;
+  background: #fff8e1;
+  color: #795548;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  border: 1px solid #ffe0b2;
+}
+
+/* --- Agent UI animation effects --- */
+
+@keyframes agent-glow {
+  0% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.4); }
+  50% { box-shadow: 0 0 8px 4px rgba(0, 122, 255, 0.3); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.4); }
+}
+
+@keyframes agent-flash-bg {
+  0% { background-color: rgba(0, 122, 255, 0.15); }
+  100% { background-color: transparent; }
+}
+
+@keyframes agent-fade {
+  0% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(-20px); }
+}
+
+.agent-highlight {
+  animation: agent-glow 0.4s ease-in-out;
+  outline: 2px solid rgba(0, 122, 255, 0.5);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.agent-flash {
+  animation: agent-flash-bg 0.6s ease-out;
+}
+
+.agent-fade-out {
+  animation: agent-fade 0.4s ease-out forwards;
+}
+
+/* Make actions visible during agent operations */
+.agent-highlight .todo-actions,
+.agent-flash .todo-actions {
+  opacity: 1;
+}
