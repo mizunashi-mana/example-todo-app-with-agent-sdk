@@ -92,6 +92,9 @@ export function createApp(storage: TodoStorage, options?: AppOptions) {
     const ollamaHost = process.env.OLLAMA_HOST ?? 'http://localhost:11434';
     try {
       const res = await fetch(`${ollamaHost}/api/tags`);
+      if (!res.ok) {
+        return errorResponse(c, 502, 'OLLAMA_CONNECTION_ERROR', `Ollama returned status ${String(res.status)}`);
+      }
       const data: unknown = await res.json();
       const modelsArray = isRecord(data) && Array.isArray(data.models) ? data.models : [];
       const models = modelsArray
