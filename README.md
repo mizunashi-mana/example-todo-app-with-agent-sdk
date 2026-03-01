@@ -1,35 +1,35 @@
 # example-todo-app-with-agent-sdk
 
-A natural language TODO task management app powered by Ollama and an Agent SDK.
+Ollama と Agent SDK を活用した、自然言語で操作できる TODO タスク管理アプリです。
 
-## What
+## 概要
 
-A sample project that demonstrates how to build a TODO application where users can manage tasks through natural language conversation with a locally-running AI agent via Ollama. Features a 2-column layout with a TODO list as the main panel and an AI chat sidebar.
+ローカルで動作する AI エージェント（Ollama）との自然言語チャットを通じてタスクを管理できる TODO アプリケーションのサンプルプロジェクトです。メインパネルに TODO リスト、サイドバーに AI チャットを配置した 2 カラムレイアウトを採用しています。
 
-## Why
+## 特徴
 
-- Learn how to integrate Agent SDKs with Ollama for local LLM-powered applications
-- Explore agent-driven application patterns without cloud API dependencies
-- Production-quality sample with linting, testing, and CI
+- Agent SDK と Ollama を連携させたローカル LLM アプリケーションの構築方法を学べる
+- クラウド API に依存しないエージェント駆動アプリケーションパターンを体験できる
+- lint・テスト・CI を備えた実用的なサンプルプロジェクト
 
-## Tech Stack
+## 技術スタック
 
 - **Agent SDK**: Vercel AI SDK v6 (`ai` + `ai-sdk-ollama`)
-- **Backend**: Hono (Node.js)
-- **Frontend**: React 19 + Vite 7
-- **Dev Environment**: devenv (Nix) + direnv
-- **Testing**: vitest
+- **バックエンド**: Hono (Node.js)
+- **フロントエンド**: React 19 + Vite 7
+- **開発環境**: devenv (Nix) + direnv
+- **テスト**: vitest
 - **CI**: GitHub Actions
 
-## Quick Start
+## クイックスタート
 
-### Prerequisites
+### 前提条件
 
 - [devenv](https://devenv.sh/)
 - [direnv](https://direnv.net/)
-- [Ollama](https://ollama.ai/) with a model installed (e.g., `ollama pull gemma3`)
+- [Ollama](https://ollama.ai/) とモデルのインストール（例: `ollama pull gemma3`）
 
-### Setup
+### セットアップ
 
 ```bash
 git clone <repository-url>
@@ -38,18 +38,18 @@ direnv allow
 npm install
 ```
 
-### Run
+### 起動
 
 ```bash
-# Start Ollama (in a separate terminal)
+# Ollama を起動（別ターミナルで）
 ollama serve
 
-# Start dev server (backend + frontend)
+# 開発サーバを起動（バックエンド + フロントエンド）
 npm run dev
 ```
 
-The TODO app will be available at `http://localhost:5173` (Vite dev server proxying to the backend on port 3000).
+TODO アプリは `http://localhost:5173`（Vite dev server がポート 3000 のバックエンドにプロキシ）で利用できます。
 
-## License
+## ライセンス
 
-Licensed under Apache License, Version 2.0 or Mozilla Public License, Version 2.0, at your option.
+Apache License, Version 2.0 または Mozilla Public License, Version 2.0 のいずれかを選択して利用できます。

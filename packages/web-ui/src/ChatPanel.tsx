@@ -230,7 +230,7 @@ export function ChatPanel({ todoPanelRef }: ChatPanelProps) {
         const toolNames = toolCalls.map(tc => tc.toolName).join(', ');
         setDisplayMessages(prev => [
           ...prev,
-          { id: generateId(), role: 'system', content: `Executing: ${toolNames}...` },
+          { id: generateId(), role: 'system', content: `実行中: ${toolNames}...` },
         ]);
 
         // Execute each tool call via TodoPanel
@@ -288,7 +288,7 @@ export function ChatPanel({ todoPanelRef }: ChatPanelProps) {
   return (
     <div className="chat-panel">
       <header className="chat-header">
-        <h2>Chat</h2>
+        <h2>チャット</h2>
         {models.length > 0 && (
           <select
             className="chat-model-select"
@@ -296,7 +296,7 @@ export function ChatPanel({ todoPanelRef }: ChatPanelProps) {
             onChange={(e) => { setSelectedModel(e.target.value); }}
             disabled={loading}
           >
-            <option value="">Default</option>
+            <option value="">デフォルト</option>
             {models.map(m => (
               <option key={m.name} value={m.name}>{m.name}</option>
             ))}
@@ -306,21 +306,21 @@ export function ChatPanel({ todoPanelRef }: ChatPanelProps) {
       <div className="chat-messages">
         {displayMessages.length === 0 && (
           <div className="chat-empty">
-            Send a message to manage your TODOs.
+            メッセージを送って TODO を管理しましょう。
           </div>
         )}
         {displayMessages.map(msg => (
           <div key={msg.id} className={`chat-message chat-message-${msg.role}`}>
             <div className="chat-message-role">
-              {msg.role === 'user' ? 'You' : msg.role === 'system' ? 'System' : 'Assistant'}
+              {msg.role === 'user' ? 'あなた' : msg.role === 'system' ? 'システム' : 'アシスタント'}
             </div>
             <div className="chat-message-content">{msg.content}</div>
           </div>
         ))}
         {loading && (
           <div className="chat-message chat-message-assistant">
-            <div className="chat-message-role">Assistant</div>
-            <div className="chat-message-content chat-loading">Thinking...</div>
+            <div className="chat-message-role">アシスタント</div>
+            <div className="chat-message-content chat-loading">考え中...</div>
           </div>
         )}
         <div ref={messagesEndRef} />
@@ -331,11 +331,11 @@ export function ChatPanel({ todoPanelRef }: ChatPanelProps) {
           type="text"
           value={input}
           onChange={(e) => { setInput(e.target.value); }}
-          placeholder="Type a message..."
+          placeholder="メッセージを入力..."
           disabled={loading}
         />
         <button className="chat-send" type="submit" disabled={loading || input.trim() === ''}>
-          Send
+          送信
         </button>
       </form>
     </div>
