@@ -7,7 +7,7 @@
 | 言語 | JavaScript (Node.js) | devenv で管理 |
 | パッケージマネージャ | npm | |
 | LLM ランタイム | Ollama | ローカルモデルを使用 |
-| Agent SDK | 未定 | 調査・比較の上で選定予定 |
+| Agent SDK | Vercel AI SDK v6 (`ai` + `ai-sdk-ollama`) | 調査比較の結果選定。Zod ベースのツール定義、ToolLoopAgent |
 | 開発環境 | devenv (Nix) + direnv | 再現可能な環境構築 |
 | コード品質 | ESLint | パッケージごとに設定 |
 | Git hooks | pre-commit (devenv) | actionlint, eslint |
@@ -23,8 +23,7 @@
 ## パッケージ構成（予定）
 
 - `packages/eslint-config` - 共有 ESLint 設定
-- `packages/mcp-html-artifacts-preview` - HTML アーティファクトプレビュー用 MCP サーバー
-- （TODO アプリ本体のパッケージは今後追加）
+- `packages/todo-app` - TODO アプリ本体
 
 ## 開発環境
 
@@ -41,8 +40,8 @@
 
 ## テスト戦略
 
-未定（Agent SDK 選定後に決定）
+- vitest によるユニットテスト（`packages/todo-app` に設定済み）
 
 ## CI/CD
 
-未定（GitHub Actions を想定）
+- GitHub Actions（ci-lint, ci-test ワークフロー設定済み）

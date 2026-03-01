@@ -9,17 +9,21 @@
 - devenv による開発環境構築
 - Git hooks 設定（actionlint, eslint）
 - autodev 開発環境の初期化
+- モノレポ構成のセットアップ（npm workspaces）
+- 共有 ESLint 設定パッケージの作成
+- GitHub Actions CI（ci-lint, ci-test）
+- Agent SDK の選定調査 → **Vercel AI SDK v6** に決定（調査: `.ai-agent/surveys/20260301-js-agent-sdk-comparison/`）
 
 ## 進行中
 
-- Agent SDK の選定調査（Ollama 対応の JS Agent SDK 比較）
+（なし）
 
 ## 今後の計画
 
 ### Phase 1: 基盤構築
-- [ ] Agent SDK の調査・比較・選定
-- [ ] モノレポ構成のセットアップ（npm workspaces）
-- [ ] 共有 ESLint 設定パッケージの作成
+- [x] Agent SDK の調査・比較・選定
+- [x] モノレポ構成のセットアップ（npm workspaces）
+- [x] 共有 ESLint 設定パッケージの作成
 - [ ] TODO データモデルの設計
 
 ### Phase 2: コア機能実装
