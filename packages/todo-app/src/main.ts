@@ -4,7 +4,7 @@ import { InMemoryTodoStorage } from './storage/index.js';
 
 const storage = new InMemoryTodoStorage();
 const app = createApp(storage, {
-  model: process.env.OLLAMA_MODEL ?? 'llama3.2',
+  model: process.env.OLLAMA_MODEL ?? 'gemma3',
 });
 
 const port = Number(process.env.PORT ?? 3000);

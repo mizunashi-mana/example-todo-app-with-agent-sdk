@@ -29,6 +29,10 @@ function getErrorMessage(data: unknown): string | undefined {
   return undefined;
 }
 
+interface OllamaModel {
+  name: string;
+}
+
 interface ChatPanelProps {
   onChatResponse?: () => void;
 }
@@ -38,10 +42,13 @@ export function ChatPanel({ onChatResponse }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [models, setModels] = useState<OllamaModel[]>([]);
+  const [selectedModel, setSelectedModel] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<ChatMessage[]>([]);
   const inputRef = useRef<string>('');
   const loadingRef = useRef<boolean>(false);
+  const selectedModelRef = useRef<string>('');
   const nextIdRef = useRef(0);
 
   function generateId(): string {
@@ -52,6 +59,26 @@ export function ChatPanel({ onChatResponse }: ChatPanelProps) {
   messagesRef.current = messages;
   inputRef.current = input;
   loadingRef.current = loading;
+  selectedModelRef.current = selectedModel;
+
+  useEffect(() => {
+    async function fetchModels() {
+      try {
+        const res = await fetch('/api/models');
+        const data: unknown = await res.json();
+        const fetched = isRecord(data) && Array.isArray(data.models)
+          ? (data.models as unknown[])
+              .filter((m): m is Record<string, unknown> => isRecord(m) && typeof m.name === 'string')
+              .map(m => ({ name: String(m.name) }))
+          : [];
+        setModels(fetched);
+      }
+      catch {
+        // Ollama may not be running; ignore
+      }
+    }
+    void fetchModels();
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -74,12 +101,16 @@ export function ChatPanel({ onChatResponse }: ChatPanelProps) {
     setLoading(true);
 
     try {
+      const body: Record<string, unknown> = {
+        messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
+      };
+      if (selectedModelRef.current !== '') {
+        body.model = selectedModelRef.current;
+      }
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
-        }),
+        body: JSON.stringify(body),
       });
 
       const data: unknown = await res.json();
@@ -113,6 +144,19 @@ export function ChatPanel({ onChatResponse }: ChatPanelProps) {
     <div className="chat-panel">
       <header className="chat-header">
         <h2>Chat</h2>
+        {models.length > 0 && (
+          <select
+            className="chat-model-select"
+            value={selectedModel}
+            onChange={(e) => { setSelectedModel(e.target.value); }}
+            disabled={loading}
+          >
+            <option value="">Default</option>
+            {models.map(m => (
+              <option key={m.name} value={m.name}>{m.name}</option>
+            ))}
+          </select>
+        )}
       </header>
       <div className="chat-messages">
         {messages.length === 0 && (

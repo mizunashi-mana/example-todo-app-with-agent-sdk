@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { AgentError, createTodoAgent, type AgentOptions, type ChatMessage } from '#agent';
+import { AgentError, createTodoAgent, type AgentOptions, type ChatMessage, type ChatOptions } from '#agent';
 import { errorResponse } from './errors.js';
 import type { TodoStorage } from '#storage';
 
@@ -86,12 +86,30 @@ export function createApp(storage: TodoStorage, options?: AppOptions) {
     return c.json({ success: true });
   });
 
+  // --- Models API ---
+
+  app.get('/api/models', async (c) => {
+    const ollamaHost = process.env.OLLAMA_HOST ?? 'http://localhost:11434';
+    try {
+      const res = await fetch(`${ollamaHost}/api/tags`);
+      const data: unknown = await res.json();
+      const modelsArray = isRecord(data) && Array.isArray(data.models) ? data.models : [];
+      const models = modelsArray
+        .filter((m): m is Record<string, unknown> => isRecord(m) && typeof m.name === 'string')
+        .map(m => ({ name: String(m.name) }));
+      return c.json({ models });
+    }
+    catch {
+      return errorResponse(c, 502, 'OLLAMA_CONNECTION_ERROR', 'Cannot connect to Ollama to list models');
+    }
+  });
+
   // --- Chat API ---
 
   app.post('/api/chat', async (c) => {
-    let body: { messages?: unknown };
+    let body: { messages?: unknown; model?: unknown };
     try {
-      body = await c.req.json<{ messages?: unknown }>();
+      body = await c.req.json<{ messages?: unknown; model?: unknown }>();
     }
     catch {
       return errorResponse(c, 400, 'INVALID_JSON', 'Request body must be valid JSON');
@@ -113,8 +131,13 @@ export function createApp(storage: TodoStorage, options?: AppOptions) {
       validatedMessages.push(msg);
     }
 
+    const chatOptions: ChatOptions = {};
+    if (typeof body.model === 'string' && body.model.trim() !== '') {
+      chatOptions.model = body.model.trim();
+    }
+
     try {
-      const response = await agent.chat(validatedMessages);
+      const response = await agent.chat(validatedMessages, chatOptions);
       return c.json({ role: 'assistant', content: response });
     }
     catch (e) {
