@@ -8,6 +8,68 @@ export function createApp(storage: TodoStorage, options?: AppOptions) {
   const agent = createTodoAgent(storage, options);
   const app = new Hono();
 
+  // --- TODO REST API ---
+
+  app.get('/api/todos', (c) => {
+    const todos = storage.getAll();
+    return c.json({ todos });
+  });
+
+  app.post('/api/todos', async (c) => {
+    let body;
+    try {
+      body = await c.req.json<{ title?: string; description?: string }>();
+    }
+    catch {
+      return c.json({ error: 'Invalid JSON body' }, 400);
+    }
+
+    const { title, description } = body;
+    if (typeof title !== 'string' || title.trim() === '') {
+      return c.json({ error: 'title is required' }, 400);
+    }
+
+    const todo = storage.create({ title: title.trim(), description });
+    return c.json(todo, 201);
+  });
+
+  app.put('/api/todos/:id', async (c) => {
+    const id = c.req.param('id');
+    let body;
+    try {
+      body = await c.req.json<{
+        title?: string;
+        description?: string;
+        status?: string;
+      }>();
+    }
+    catch {
+      return c.json({ error: 'Invalid JSON body' }, 400);
+    }
+
+    const params: Record<string, string | undefined> = {};
+    if (typeof body.title === 'string') params.title = body.title;
+    if (typeof body.description === 'string') params.description = body.description;
+    if (body.status === 'pending' || body.status === 'completed') params.status = body.status;
+
+    const updated = storage.update(id, params);
+    if (!updated) {
+      return c.json({ error: `TODO with id ${id} not found` }, 404);
+    }
+    return c.json(updated);
+  });
+
+  app.delete('/api/todos/:id', (c) => {
+    const id = c.req.param('id');
+    const deleted = storage.delete(id);
+    if (!deleted) {
+      return c.json({ error: `TODO with id ${id} not found` }, 404);
+    }
+    return c.json({ success: true });
+  });
+
+  // --- Chat API ---
+
   app.post('/api/chat', async (c) => {
     let body;
     try {
