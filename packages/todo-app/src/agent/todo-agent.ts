@@ -177,7 +177,7 @@ export function createTodoAgent(options?: AgentOptions) {
         stopWhen: stepCountIs(MAX_STEPS),
       });
 
-      if (result.finishReason === 'tool-calls' && result.toolCalls.length > 0) {
+      if (result.toolCalls.length > 0) {
         return {
           type: 'tool_calls',
           toolCalls: result.toolCalls.map(tc => ({
