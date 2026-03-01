@@ -2,6 +2,10 @@
 
 Ollama と Agent SDK を活用した、自然言語で操作できる TODO タスク管理アプリです。
 
+## デモ
+
+<video src="docs/assets/demo.webm" controls width="100%"></video>
+
 ## 概要
 
 ローカルで動作する AI エージェント（Ollama）との自然言語チャットを通じてタスクを管理できる TODO アプリケーションのサンプルプロジェクトです。メインパネルに TODO リスト、サイドバーに AI チャットを配置した 2 カラムレイアウトを採用しています。
