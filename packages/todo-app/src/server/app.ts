@@ -24,11 +24,12 @@ export function createApp(storage: TodoStorage, options?: AppOptions) {
       return c.json({ error: 'Invalid JSON body' }, 400);
     }
 
-    const { title, description } = body;
+    const { title } = body;
     if (typeof title !== 'string' || title.trim() === '') {
       return c.json({ error: 'title is required' }, 400);
     }
 
+    const description = typeof body.description === 'string' ? body.description : undefined;
     const todo = storage.create({ title: title.trim(), description });
     return c.json(todo, 201);
   });
@@ -48,7 +49,12 @@ export function createApp(storage: TodoStorage, options?: AppOptions) {
     }
 
     const params: Record<string, string | undefined> = {};
-    if (typeof body.title === 'string') params.title = body.title;
+    if (typeof body.title === 'string') {
+      if (body.title.trim() === '') {
+        return c.json({ error: 'title must not be empty' }, 400);
+      }
+      params.title = body.title.trim();
+    }
     if (typeof body.description === 'string') params.description = body.description;
     if (body.status === 'pending' || body.status === 'completed') params.status = body.status;
 
