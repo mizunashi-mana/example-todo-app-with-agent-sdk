@@ -56,14 +56,15 @@ packages/todo-app/src/
 
 ## 完了条件
 
-- [ ] `ai`, `ai-sdk-ollama`, `hono` が依存に追加されている
-- [ ] `createTodo`, `listTodos`, `updateTodo`, `deleteTodo` の4つのツールが定義されている
-- [ ] `ToolLoopAgent` でエージェントが構成されている
-- [ ] `POST /api/chat` エンドポイントが動作する
-- [ ] ツール定義のテストが通る
-- [ ] lint が通る
+- [x] `ai`, `ai-sdk-ollama`, `hono` が依存に追加されている
+- [x] `createTodo`, `listTodos`, `updateTodo`, `deleteTodo` の4つのツールが定義されている
+- [x] `generateText` + `stepCountIs` でエージェントが構成されている
+- [x] `POST /api/chat` エンドポイントが動作する
+- [x] ツール定義のテストが通る（10テスト）
+- [x] lint が通る
 
 ## 作業ログ
 
 - ブランチ `implement-agent-tools-and-ollama` を作成
 - Web アプリ（API + SPA）構成に方針変更。今回は API 層までがスコープ
+- ツール定義・エージェント・HTTP APIの実装完了（コミット: 90edb9f）
