@@ -27,9 +27,10 @@
 - [x] `.github/workflows/ci-lint.yml` が正しく定義されている
 - [x] `.github/workflows/ci-test.yml` が正しく定義されている
 - [x] actionlint でワークフローが検証済み
-- [ ] PR が作成されている
+- [x] PR が作成されている
 
 ## 作業ログ
 
 - タスク開始、方針承認済み
 - 全ファイル作成完了、actionlint + lint-all パス
+- PR #2 作成: https://github.com/mizunashi-mana/example-todo-app-with-agent-sdk/pull/2
