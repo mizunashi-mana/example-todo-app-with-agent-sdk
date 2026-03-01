@@ -9,3 +9,5 @@ export {
   type TodoId,
   type TodoStatus,
 } from './models/index.js';
+
+export { InMemoryTodoStorage, type TodoStorage } from './storage/index.js';
