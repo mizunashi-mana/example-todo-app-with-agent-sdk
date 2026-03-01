@@ -15,7 +15,7 @@ interface ErrorBody {
   };
 }
 
-type StatusCode = 400 | 404 | 500 | 502 | 503;
+type StatusCode = 400 | 404 | 500 | 502;
 
 export function errorResponse(c: Context, status: StatusCode, code: ErrorCode, message: string) {
   const body: ErrorBody = { error: { code, message } };

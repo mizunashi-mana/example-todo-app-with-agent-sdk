@@ -27,8 +27,8 @@ export type AgentErrorCode = 'OLLAMA_CONNECTION_ERROR' | 'AGENT_ERROR';
 export class AgentError extends Error {
   code: AgentErrorCode;
 
-  constructor(code: AgentErrorCode, message: string) {
-    super(message);
+  constructor(code: AgentErrorCode, message: string, options?: ErrorOptions) {
+    super(message, options);
     this.name = 'AgentError';
     this.code = code;
   }
@@ -43,24 +43,30 @@ function isConnectionError(error: unknown): boolean {
     || msg.includes('connect etimedout');
 }
 
+const MODEL_NOT_FOUND_PATTERN = /model\s+'[^']*'\s+not found/i;
+
 function classifyAgentError(error: unknown): AgentError {
+  const cause = error instanceof Error ? { cause: error } : undefined;
+
   if (isConnectionError(error)) {
     return new AgentError(
       'OLLAMA_CONNECTION_ERROR',
       'Cannot connect to Ollama. Please ensure Ollama is running (run "ollama serve" in a terminal).',
+      cause,
     );
   }
 
   const message = error instanceof Error ? error.message : 'Unknown error';
 
-  if (message.includes('model') && message.includes('not found')) {
+  if (MODEL_NOT_FOUND_PATTERN.test(message)) {
     return new AgentError(
       'OLLAMA_CONNECTION_ERROR',
       `Model not found. Please download it first (run "ollama pull <model>").`,
+      cause,
     );
   }
 
-  return new AgentError('AGENT_ERROR', message);
+  return new AgentError('AGENT_ERROR', message, cause);
 }
 
 export function createTodoAgent(storage: TodoStorage, options?: AgentOptions) {
