@@ -7,12 +7,6 @@ interface ChatMessage {
   content: string;
 }
 
-let nextMessageId = 0;
-function generateMessageId(): string {
-  nextMessageId += 1;
-  return `msg-${String(nextMessageId)}`;
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -31,9 +25,17 @@ export function App() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<ChatMessage[]>([]);
   const inputRef = useRef<string>('');
   const loadingRef = useRef<boolean>(false);
+  const nextIdRef = useRef(0);
 
+  function generateId(): string {
+    nextIdRef.current += 1;
+    return `msg-${String(nextIdRef.current)}`;
+  }
+
+  messagesRef.current = messages;
   inputRef.current = input;
   loadingRef.current = loading;
 
@@ -47,15 +49,15 @@ export function App() {
       return;
     }
 
-    const userMessage: ChatMessage = { id: generateMessageId(), role: 'user', content: text };
+    const userMessage: ChatMessage = {
+      id: generateId(),
+      role: 'user',
+      content: text,
+    };
+    const updatedMessages = [...messagesRef.current, userMessage];
+    setMessages(updatedMessages);
     setInput('');
     setLoading(true);
-
-    let updatedMessages: ChatMessage[] = [];
-    setMessages((prev) => {
-      updatedMessages = [...prev, userMessage];
-      return updatedMessages;
-    });
 
     try {
       const res = await fetch('/api/chat', {
@@ -73,13 +75,13 @@ export function App() {
       }
 
       const content = getStringField(data, 'content') ?? '(No response)';
-      setMessages(prev => [...prev, { id: generateMessageId(), role: 'assistant', content }]);
+      setMessages(prev => [...prev, { id: generateId(), role: 'assistant', content }]);
     }
     catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       setMessages(prev => [
         ...prev,
-        { id: generateMessageId(), role: 'assistant', content: `Error: ${message}` },
+        { id: generateId(), role: 'assistant', content: `Error: ${message}` },
       ]);
     }
     finally {
