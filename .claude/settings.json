@@ -9,6 +9,7 @@
       "Bash(npm run typecheck:*)",
       "Bash(npm run test:*)",
       "Bash(npm run test:update:*)",
+      "Bash(npm test:*)",
       "Skill(autodev-create-pr)",
       "Skill(autodev-start-new-survey)",
       "Skill(autodev-start-new-task)",

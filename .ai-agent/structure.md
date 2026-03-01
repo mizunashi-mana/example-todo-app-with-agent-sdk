@@ -29,6 +29,9 @@
 │       ├── autodev-steering/
 │       └── autodev-switch-to-default/
 ├── .github/
+│   ├── actions/                # 再利用可能な Composite Actions
+│   │   ├── setup-devenv/       # devenv セットアップ
+│   │   └── setup-node/         # Node.js + npm install セットアップ
 │   └── workflows/              # GitHub Actions CI
 │       ├── ci-lint.yml         # lint ワークフロー
 │       └── ci-test.yml         # テストワークフロー
@@ -109,3 +112,7 @@ devenv (Nix) + direnv による再現可能な開発環境。
 - **vitest** によるユニットテスト（`packages/todo-app` に設定済み）
 - テスト対象: モデル（Zod スキーマ）、ストレージ（InMemoryTodoStorage）、ツール（Agent ツール定義）
 - CI: GitHub Actions `ci-test.yml` で自動実行
+
+## ドキュメント言語
+
+日本人向け example プロジェクトのため、`README.md` を含むユーザー向けドキュメントは日本語で記述する。
