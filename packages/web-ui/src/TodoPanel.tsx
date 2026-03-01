@@ -196,8 +196,7 @@ export function TodoPanel({ ref }: TodoPanelProps) {
         <h1>TODOs</h1>
         <span className="todo-count">
           {String(pendingTodos.length)}
-          {' '}
-          件 未完了
+          件未完了
         </span>
       </header>
 
