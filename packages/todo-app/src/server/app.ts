@@ -1,8 +1,20 @@
 import { Hono } from 'hono';
-import { createTodoAgent, type AgentOptions, type ChatMessage } from '#agent';
+import { AgentError, createTodoAgent, type AgentOptions, type ChatMessage } from '#agent';
+import { errorResponse } from './errors.js';
 import type { TodoStorage } from '#storage';
 
 export type AppOptions = AgentOptions;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isChatMessage(value: unknown): value is ChatMessage {
+  if (!isRecord(value)) return false;
+  return (value.role === 'user' || value.role === 'assistant')
+    && typeof value.content === 'string'
+    && value.content.trim() !== '';
+}
 
 export function createApp(storage: TodoStorage, options?: AppOptions) {
   const agent = createTodoAgent(storage, options);
@@ -21,12 +33,12 @@ export function createApp(storage: TodoStorage, options?: AppOptions) {
       body = await c.req.json<{ title?: string; description?: string }>();
     }
     catch {
-      return c.json({ error: 'Invalid JSON body' }, 400);
+      return errorResponse(c, 400, 'INVALID_JSON', 'Request body must be valid JSON');
     }
 
     const { title } = body;
     if (typeof title !== 'string' || title.trim() === '') {
-      return c.json({ error: 'title is required' }, 400);
+      return errorResponse(c, 400, 'VALIDATION_ERROR', 'title is required');
     }
 
     const description = typeof body.description === 'string' ? body.description : undefined;
@@ -45,13 +57,13 @@ export function createApp(storage: TodoStorage, options?: AppOptions) {
       }>();
     }
     catch {
-      return c.json({ error: 'Invalid JSON body' }, 400);
+      return errorResponse(c, 400, 'INVALID_JSON', 'Request body must be valid JSON');
     }
 
     const params: Record<string, string | undefined> = {};
     if (typeof body.title === 'string') {
       if (body.title.trim() === '') {
-        return c.json({ error: 'title must not be empty' }, 400);
+        return errorResponse(c, 400, 'VALIDATION_ERROR', 'title must not be empty');
       }
       params.title = body.title.trim();
     }
@@ -60,7 +72,7 @@ export function createApp(storage: TodoStorage, options?: AppOptions) {
 
     const updated = storage.update(id, params);
     if (!updated) {
-      return c.json({ error: `TODO with id ${id} not found` }, 404);
+      return errorResponse(c, 404, 'NOT_FOUND', `TODO with id ${id} not found`);
     }
     return c.json(updated);
   });
@@ -69,7 +81,7 @@ export function createApp(storage: TodoStorage, options?: AppOptions) {
     const id = c.req.param('id');
     const deleted = storage.delete(id);
     if (!deleted) {
-      return c.json({ error: `TODO with id ${id} not found` }, 404);
+      return errorResponse(c, 404, 'NOT_FOUND', `TODO with id ${id} not found`);
     }
     return c.json({ success: true });
   });
@@ -77,26 +89,41 @@ export function createApp(storage: TodoStorage, options?: AppOptions) {
   // --- Chat API ---
 
   app.post('/api/chat', async (c) => {
-    let body;
+    let body: { messages?: unknown };
     try {
-      body = await c.req.json<{ messages: ChatMessage[] }>();
+      body = await c.req.json<{ messages?: unknown }>();
     }
     catch {
-      return c.json({ error: 'Invalid JSON body' }, 400);
+      return errorResponse(c, 400, 'INVALID_JSON', 'Request body must be valid JSON');
     }
     const { messages } = body;
 
     if (!Array.isArray(messages) || messages.length === 0) {
-      return c.json({ error: 'messages array is required' }, 400);
+      return errorResponse(c, 400, 'VALIDATION_ERROR', 'messages array is required and must not be empty');
+    }
+
+    const validatedMessages: ChatMessage[] = [];
+    for (const msg of messages) {
+      if (!isChatMessage(msg)) {
+        return errorResponse(
+          c, 400, 'VALIDATION_ERROR',
+          'Each message must have role ("user" or "assistant") and a non-empty content string',
+        );
+      }
+      validatedMessages.push(msg);
     }
 
     try {
-      const response = await agent.chat(messages);
+      const response = await agent.chat(validatedMessages);
       return c.json({ role: 'assistant', content: response });
     }
     catch (e) {
+      if (e instanceof AgentError) {
+        const status = e.code === 'OLLAMA_CONNECTION_ERROR' ? 502 : 500;
+        return errorResponse(c, status, e.code, e.message);
+      }
       const message = e instanceof Error ? e.message : 'Unknown error';
-      return c.json({ error: `Agent error: ${message}` }, 500);
+      return errorResponse(c, 500, 'INTERNAL_ERROR', message);
     }
   });
 

@@ -18,6 +18,17 @@ function getStringField(data: unknown, field: string): string | undefined {
   return undefined;
 }
 
+function getErrorMessage(data: unknown): string | undefined {
+  if (!isRecord(data)) return undefined;
+  const error = data.error;
+  if (isRecord(error) && typeof error.message === 'string') {
+    return error.message;
+  }
+  // Fallback for legacy format
+  if (typeof data.error === 'string') return data.error;
+  return undefined;
+}
+
 interface ChatPanelProps {
   onChatResponse?: () => void;
 }
@@ -74,7 +85,7 @@ export function ChatPanel({ onChatResponse }: ChatPanelProps) {
       const data: unknown = await res.json();
 
       if (!res.ok) {
-        throw new Error(getStringField(data, 'error') ?? `HTTP ${String(res.status)}`);
+        throw new Error(getErrorMessage(data) ?? `HTTP ${String(res.status)}`);
       }
 
       const content = getStringField(data, 'content') ?? '(No response)';
