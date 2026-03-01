@@ -2,7 +2,7 @@ import { stepCountIs, type ModelMessage, type ToolCallPart, type ToolResultPart 
 import { generateText, ollama } from 'ai-sdk-ollama';
 import { createTodoTools } from '#tools';
 
-const DEFAULT_MODEL = 'gemma3';
+const DEFAULT_MODEL = 'granite4';
 const MAX_STEPS = 10;
 
 const SYSTEM_PROMPT = `You are a helpful TODO management assistant.
