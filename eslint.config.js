@@ -5,6 +5,7 @@ export default [
     entrypointFiles: [
       "packages/todo-app/src/index.ts",
       "packages/todo-app/src/main.ts",
+      "packages/web-ui/src/main.tsx",
     ],
   }),
 ];

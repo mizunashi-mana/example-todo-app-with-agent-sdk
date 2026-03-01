@@ -32,6 +32,11 @@
     entry = "./scripts/run-script.mjs --cwd packages/todo-app -- npx eslint --cache --fix FILES";
     files = "^packages/todo-app/.*\.[cm]?(js|ts)x?$";
   };
+  git-hooks.hooks.npx-eslint-pkg-web-ui = {
+    enable = true;
+    entry = "./scripts/run-script.mjs --cwd packages/web-ui -- npx eslint --cache --fix FILES";
+    files = "^packages/web-ui/.*\.[cm]?(js|ts)x?$";
+  };
 
   # See full reference at https://devenv.sh/reference/options/
 }
