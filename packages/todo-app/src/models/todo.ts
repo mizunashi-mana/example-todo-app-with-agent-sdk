@@ -26,9 +26,10 @@ export type Todo = z.infer<typeof todoSchema>;
 
 // --- Factory ---
 
-export function createTodo(
-  params: Pick<Todo, 'title'> & Partial<Pick<Todo, 'description'>>,
-): Todo {
+export type CreateTodoParams = Pick<Todo, 'title'>
+  & Partial<Pick<Todo, 'description'>>;
+
+export function createTodo(params: CreateTodoParams): Todo {
   const now = new Date();
   return {
     id: randomUUID(),

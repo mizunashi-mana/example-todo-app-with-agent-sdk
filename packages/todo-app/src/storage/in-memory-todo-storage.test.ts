@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { InMemoryTodoStorage } from './in-memory-todo-storage.js';
 
 describe('InMemoryTodoStorage', () => {
@@ -91,14 +91,19 @@ describe('InMemoryTodoStorage', () => {
     });
 
     it('sets updatedAt to a new date', () => {
-      const todo = storage.create({ title: 'Test' });
-      const originalUpdatedAt = todo.updatedAt;
+      vi.useFakeTimers();
+      try {
+        const todo = storage.create({ title: 'Test' });
+        vi.advanceTimersByTime(1000);
+        const updated = storage.update(todo.id, { title: 'Updated' });
 
-      const updated = storage.update(todo.id, { title: 'Updated' });
-
-      expect(updated?.updatedAt.getTime()).toBeGreaterThanOrEqual(
-        originalUpdatedAt.getTime(),
-      );
+        expect(updated?.updatedAt.getTime()).toBeGreaterThan(
+          todo.updatedAt.getTime(),
+        );
+      }
+      finally {
+        vi.useRealTimers();
+      }
     });
 
     it('persists the update', () => {

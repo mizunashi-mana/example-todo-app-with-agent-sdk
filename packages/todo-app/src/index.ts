@@ -5,6 +5,7 @@ export {
   todoIdSchema,
   todoSchema,
   todoStatusSchema,
+  type CreateTodoParams,
   type Todo,
   type TodoId,
   type TodoStatus,

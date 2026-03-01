@@ -1,7 +1,7 @@
-import type { Todo, TodoId } from '#models';
+import type { CreateTodoParams, Todo, TodoId } from '#models';
 
 export interface TodoStorage {
-  create: (params: { title: string; description?: string }) => Todo;
+  create: (params: CreateTodoParams) => Todo;
   getById: (id: TodoId) => Todo | undefined;
   getAll: () => Todo[];
   update: (

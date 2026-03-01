@@ -1,22 +1,23 @@
 import { createTodo } from '#models';
-import type { Todo, TodoId } from '#models';
+import type { CreateTodoParams, Todo, TodoId } from '#models';
 import type { TodoStorage } from './todo-storage.js';
 
 export class InMemoryTodoStorage implements TodoStorage {
   private readonly todos = new Map<TodoId, Todo>();
 
-  create(params: { title: string; description?: string }): Todo {
+  create(params: CreateTodoParams): Todo {
     const todo = createTodo(params);
     this.todos.set(todo.id, todo);
-    return todo;
+    return { ...todo };
   }
 
   getById(id: TodoId): Todo | undefined {
-    return this.todos.get(id);
+    const todo = this.todos.get(id);
+    return todo ? { ...todo } : undefined;
   }
 
   getAll(): Todo[] {
-    return [...this.todos.values()];
+    return [...this.todos.values()].map(todo => ({ ...todo }));
   }
 
   update(
@@ -32,7 +33,7 @@ export class InMemoryTodoStorage implements TodoStorage {
       updatedAt: new Date(),
     };
     this.todos.set(id, updated);
-    return updated;
+    return { ...updated };
   }
 
   delete(id: TodoId): boolean {
