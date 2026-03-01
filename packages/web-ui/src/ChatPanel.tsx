@@ -40,6 +40,7 @@ interface ToolCallsResponse {
 interface TextResponse {
   type: 'text';
   content: string;
+  warning?: string;
 }
 
 type ChatApiResponse = ToolCallsResponse | TextResponse;
@@ -50,6 +51,7 @@ interface DisplayMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
+  variant?: 'warning';
 }
 
 // --- Helpers ---
@@ -265,6 +267,9 @@ export function ChatPanel({ todoPanelRef }: ChatPanelProps) {
       setDisplayMessages(prev => [
         ...prev,
         { id: generateId(), role: 'assistant', content: response.content },
+        ...(response.warning !== undefined
+          ? [{ id: generateId(), role: 'system' as const, content: response.warning, variant: 'warning' as const }]
+          : []),
       ]);
     }
     catch (err) {
@@ -310,7 +315,7 @@ export function ChatPanel({ todoPanelRef }: ChatPanelProps) {
           </div>
         )}
         {displayMessages.map(msg => (
-          <div key={msg.id} className={`chat-message chat-message-${msg.role}`}>
+          <div key={msg.id} className={`chat-message chat-message-${msg.role}${msg.variant === 'warning' ? ' chat-message-warning' : ''}`}>
             <div className="chat-message-role">
               {msg.role === 'user' ? 'あなた' : msg.role === 'system' ? 'システム' : 'アシスタント'}
             </div>

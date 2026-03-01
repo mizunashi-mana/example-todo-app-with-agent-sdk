@@ -385,6 +385,16 @@
   border: 1px solid #ffe0b2;
 }
 
+.chat-message-warning {
+  align-self: center;
+  background: #fff3e0;
+  color: #e65100;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  border: 1px solid #ffcc80;
+}
+
 /* --- Agent UI animation effects --- */
 
 @keyframes agent-glow {

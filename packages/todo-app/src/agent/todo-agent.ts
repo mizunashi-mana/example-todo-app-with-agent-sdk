@@ -57,6 +57,7 @@ export function isToolResultMessage(msg: ChatMessage): msg is ToolResultMessage 
 export interface ChatTextResponse {
   type: 'text';
   content: string;
+  warning?: string;
 }
 
 export interface ChatToolCallsResponse {
@@ -189,9 +190,15 @@ export function createTodoAgent(options?: AgentOptions) {
         };
       }
 
+      const content = result.text !== '' ? result.text : '(No response generated)';
+      const toolNames = Object.keys(tools);
+      const looksLikeToolCall = toolNames.some(name => content.includes(`"${name}"`));
       return {
         type: 'text',
-        content: result.text !== '' ? result.text : '(No response generated)',
+        content,
+        ...(looksLikeToolCall && {
+          warning: 'このモデルはツールコーリングに対応していない可能性があります。別のモデル（例: granite4）をお試しください。',
+        }),
       };
     }
     catch (error) {
