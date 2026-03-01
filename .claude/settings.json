@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run lint:eslint:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run test:update:*)",
+      "Skill(autodev-create-pr)",
+      "Skill(autodev-start-new-task)",
+      "Skill(autodev-steering)"
+    ],
+    "deny": [
+      "Bash(pnpm:*)",
+      "Bash(yarn:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "^(Write|MultiEdit|Edit|Update)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cc-edit-lint-hook"
+          }
+        ]
+      }
+    ]
+  }
+}

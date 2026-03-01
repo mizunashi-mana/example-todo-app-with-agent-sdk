@@ -27,10 +27,10 @@
     entry = "./scripts/run-script.mjs --cwd packages/eslint-config -- npx eslint --cache --fix FILES";
     files = "^packages/eslint-config/.*\.[cm]?(js|ts)x?$";
   };
-  git-hooks.hooks.npx-eslint-pkg-mcp-html-artifacts-preview = {
+  git-hooks.hooks.npx-eslint-pkg-todo-app = {
     enable = true;
-    entry = "./scripts/run-script.mjs --cwd packages/mcp-html-artifacts-preview -- npx eslint --cache --fix FILES";
-    files = "^packages/mcp-html-artifacts-preview/.*\.[cm]?(js|ts)x?$";
+    entry = "./scripts/run-script.mjs --cwd packages/todo-app -- npx eslint --cache --fix FILES";
+    files = "^packages/todo-app/.*\.[cm]?(js|ts)x?$";
   };
 
   # See full reference at https://devenv.sh/reference/options/
