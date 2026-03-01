@@ -27,7 +27,7 @@ A sample project that demonstrates how to build a TODO application where users c
 
 - [devenv](https://devenv.sh/)
 - [direnv](https://direnv.net/)
-- [Ollama](https://ollama.ai/) with a model installed (e.g., `ollama pull llama3.2`)
+- [Ollama](https://ollama.ai/) with a model installed (e.g., `ollama pull gemma3`)
 
 ### Setup
 
