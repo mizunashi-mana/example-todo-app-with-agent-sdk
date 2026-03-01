@@ -4,7 +4,7 @@ Ollama と Agent SDK を活用した、自然言語で操作できる TODO タ�
 
 ## デモ
 
-<video src="docs/assets/demo.webm" controls width="100%"></video>
+<video src="https://github.com/user-attachments/assets/238c6f5f-0ef9-4a2a-ba14-a8afe161fd45" controls width="100%"></video>
 
 ## 概要
 
