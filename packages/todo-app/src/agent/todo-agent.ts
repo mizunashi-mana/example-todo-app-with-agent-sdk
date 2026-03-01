@@ -3,7 +3,7 @@ import { generateText, ollama } from 'ai-sdk-ollama';
 import { createTodoTools } from '#tools';
 import type { TodoStorage } from '#storage';
 
-const DEFAULT_MODEL = 'llama3.2';
+const DEFAULT_MODEL = 'gemma3';
 const MAX_STEPS = 10;
 
 const SYSTEM_PROMPT = `You are a helpful TODO management assistant.
@@ -69,11 +69,16 @@ function classifyAgentError(error: unknown): AgentError {
   return new AgentError('AGENT_ERROR', message, cause);
 }
 
+export interface ChatOptions {
+  model?: string;
+}
+
 export function createTodoAgent(storage: TodoStorage, options?: AgentOptions) {
   const tools = createTodoTools(storage);
-  const modelName = options?.model ?? DEFAULT_MODEL;
+  const defaultModel = options?.model ?? DEFAULT_MODEL;
 
-  async function chat(messages: ChatMessage[]): Promise<string> {
+  async function chat(messages: ChatMessage[], chatOptions?: ChatOptions): Promise<string> {
+    const modelName = chatOptions?.model ?? defaultModel;
     try {
       const result = await generateText({
         model: ollama(modelName),

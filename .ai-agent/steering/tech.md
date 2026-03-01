@@ -40,7 +40,7 @@
 
 1. [devenv](https://devenv.sh/) をインストール
 2. [direnv](https://direnv.net/) をインストール
-3. [Ollama](https://ollama.ai/) をインストールし、モデルをダウンロード（例: `ollama pull llama3.2`）
+3. [Ollama](https://ollama.ai/) をインストールし、モデルをダウンロード（例: `ollama pull gemma3`）
 4. リポジトリルートで `direnv allow` を実行
 5. `npm install` で依存関係をインストール
 
